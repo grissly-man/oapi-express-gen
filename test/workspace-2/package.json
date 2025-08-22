@@ -1,0 +1,18 @@
+{
+  "name": "test-workspace-2",
+  "version": "1.0.0",
+  "description": "Second test workspace for OpenAPI generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test:generate && npm run test:snapshot",
+    "test:generate": "node ../../dist/index.js ./petstore-openapi.json ./generated/handlers.ts",
+    "test:snapshot": "node -e \"const fs = require('fs'); const generated = fs.readFileSync('./generated/handlers.ts', 'utf8'); const snapshot = fs.readFileSync('./snapshots/handlers.snapshot.ts', 'utf8'); if (generated === snapshot) { console.log('✅ Snapshot test passed'); process.exit(0); } else { console.log('❌ Snapshot test failed'); process.exit(1); }\"",
+    "generate": "node ../../dist/index.js ./petstore-openapi.json ./generated/handlers.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21"
+  }
+} 

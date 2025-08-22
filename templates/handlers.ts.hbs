@@ -1,0 +1,99 @@
+// AUTO-GENERATED - DO NOT EDIT
+// Generated from OpenAPI spec: {{specTitle}} v{{specVersion}}
+
+import { Request, Response } from "express";
+
+{{#if hasArrayItemSchemas}}
+// Array item types
+{{#each arrayItemSchemas}}
+export interface {{name}} {
+  {{#each properties}}
+  {{@key}}: {{this}};
+  {{/each}}
+}
+{{/each}}
+{{/if}}
+
+{{#if hasPathParams}}
+// Path parameter types
+{{#each pathParams}}
+export interface {{name}} {
+  {{#each properties}}
+  {{@key}}: {{this}};
+  {{/each}}
+  [key: string]: any;
+}
+{{/each}}
+{{/if}}
+
+{{#if hasQueryParams}}
+// Query parameter types
+{{#each queryParams}}
+export interface {{name}} {
+  {{#each properties}}
+  {{@key}}: {{this}};
+  {{/each}}
+  [key: string]: any;
+}
+{{/each}}
+{{/if}}
+
+{{#if hasBodySchemas}}
+// Request body types
+{{#each bodySchemas}}
+export interface {{name}} {
+  {{#each properties}}
+  {{@key}}: {{this}};
+  {{/each}}
+}
+{{/each}}
+{{/if}}
+
+{{#if hasResponseSchemas}}
+// Response types
+{{#each responseSchemas}}
+export interface {{name}} {
+  {{#each properties}}
+  {{@key}}: {{this}};
+  {{/each}}
+}
+{{/each}}
+{{/if}}
+
+// Request types for each operation
+{{#each operations}}
+export interface {{operationId}}Request extends Request {
+  {{#if pathParams}}
+  params: {{pathParams}};
+  {{/if}}
+  {{#if queryParams}}
+  query: {{queryParams}};
+  {{/if}}
+  {{#if bodySchema}}
+  body: {{bodySchema}};
+  {{/if}}
+}
+{{/each}}
+
+// Response types for each operation
+{{#each operations}}
+export interface {{operationId}}Response extends Response {
+  {{#if responseSchema}}
+  json: (body: {{responseSchema}}) => this;
+  {{/if}}
+}
+{{/each}}
+
+// Handler function types
+export type Handlers = {
+{{#each operations}}
+  {{operationId}}: (req: {{operationId}}Request, res: {{operationId}}Response) => void | Promise<void>;
+{{/each}}
+};
+
+// Route registration helper
+export const registerHandlers = (app: any, handlers: Handlers) => {
+{{#each operations}}
+  app.{{httpMethod}}('{{path}}', handlers.{{operationId}});
+{{/each}}
+};

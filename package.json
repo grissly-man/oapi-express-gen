@@ -1,0 +1,29 @@
+{
+  "name": "oapi-express-gen",
+  "version": "1.0.0",
+  "description": "Code generator to create the interfaces and route handler for an express server from OpenAPI types",
+  "main": "dist/index.js",
+  "workspaces": [
+    "test/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "generate": "ts-node src/index.ts",
+    "test": "npm run test:workspaces",
+    "test:workspaces": "npm run test --workspaces",
+    "test:generate": "npm run generate --workspace=test/workspace-1",
+    "test:snapshot": "npm run test:snapshot --workspaces"
+  },
+  "dependencies": {
+    "handlebars": "^4.7.8",
+    "openapi-types": "^12.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.21",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
