@@ -9,6 +9,7 @@ A code generator that creates fully-typed Express.js handlers from OpenAPI speci
 - **OpenAPI 3.0 Support**: Parses OpenAPI 3.0.x specifications
 - **Automatic Route Registration**: Includes helper functions to register all generated handlers
 - **Test Workspaces**: Multiple test workspaces with snapshot testing
+- **Command Line Interface**: Easy-to-use CLI with Commander.js
 
 ## Installation
 
@@ -18,7 +19,42 @@ npm install
 
 ## Usage
 
-### 1. Generate Handlers
+### CLI Interface (Recommended)
+
+The generator now provides a modern CLI interface:
+
+```bash
+# Basic usage
+oapi-express-gen <source-file>
+
+# With custom output path
+oapi-express-gen ./openapi.json -o ./src/handlers.ts
+
+# With verbose logging
+oapi-express-gen ./openapi.json -o ./src/handlers.ts -v
+
+# Validate OpenAPI spec without generating code
+oapi-express-gen validate ./openapi.json
+
+# Use custom template
+oapi-express-gen ./openapi.json -t ./custom-template.hbs
+```
+
+#### CLI Options
+
+- `-o, --output <path>`: Output path for generated handlers (default: `./generated/handlers.ts`)
+- `-t, --template <path>`: Custom Handlebars template path
+- `-v, --verbose`: Enable verbose logging
+- `-h, --help`: Show help information
+
+#### CLI Commands
+
+- `generate <source>`: Generate handlers from OpenAPI spec (default command)
+- `validate <source>`: Validate OpenAPI specification without generating code
+
+### Legacy Usage
+
+For backward compatibility, you can still use the old method:
 
 ```bash
 npm run generate <openapi-spec.json> <output-path>
@@ -208,6 +244,16 @@ npm run test:generate --workspace=test/workspace-1
 
 # Generate for workspace 2
 npm run test:generate --workspace=test/workspace-2
+```
+
+### CLI Development
+```bash
+# Build the CLI
+npm run build
+
+# Test the CLI
+node dist/cli.js --help
+node dist/cli.js validate ./test/workspace-1/example-openapi.json
 ```
 
 ## License

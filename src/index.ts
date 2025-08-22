@@ -54,13 +54,15 @@ interface TemplateData {
   hasArrayItemSchemas: boolean;
 }
 
-class OpenAPIGenerator {
+export class OpenAPIGenerator {
   private spec: OpenAPIV3.Document;
   private templateData: TemplateData;
+  private customTemplatePath?: string;
 
-  constructor(specPath: string) {
+  constructor(specPath: string, customTemplatePath?: string) {
     const specContent = fs.readFileSync(specPath, 'utf-8');
     this.spec = JSON.parse(specContent);
+    this.customTemplatePath = customTemplatePath;
     this.templateData = this.buildTemplateData();
   }
 
@@ -167,7 +169,7 @@ class OpenAPIGenerator {
             const properties: Record<string, string> = {};
             pathParamsList.forEach(param => {
               if (this.isParameterObject(param) && param.schema && this.isSchemaObject(param.schema)) {
-                properties[param.name] = this.mapOpenAPITypeToTS(param.schema, operation.operationId);
+                properties[param.name] = this.mapOpenAPITypeToTS(param.schema, operation.operationId, param.name);
               }
             });
             
@@ -185,7 +187,7 @@ class OpenAPIGenerator {
             const properties: Record<string, string> = {};
             queryParamsList.forEach(param => {
               if (this.isParameterObject(param) && param.schema && this.isSchemaObject(param.schema)) {
-                properties[param.name] = this.mapOpenAPITypeToTS(param.schema, operation.operationId);
+                properties[param.name] = this.mapOpenAPITypeToTS(param.schema, operation.operationId, param.name);
               }
             });
             
@@ -302,7 +304,7 @@ class OpenAPIGenerator {
 
   public generate(outputPath: string): void {
     // Read the template
-    const templatePath = path.join(__dirname, '../templates/handlers.ts.hbs');
+    const templatePath = this.customTemplatePath || path.join(__dirname, '../templates/handlers.ts.hbs');
     const templateContent = fs.readFileSync(templatePath, 'utf-8');
     
     // Compile the template
@@ -323,15 +325,25 @@ class OpenAPIGenerator {
     console.log(`Generated handlers at: ${outputPath}`);
     console.log(`Generated ${this.templateData.operations.length} operations`);
   }
+
+  // CLI helper methods
+  public getSpecInfo(): string {
+    return `${this.spec.info?.title || 'Unknown API'} v${this.spec.info?.version || '1.0.0'}`;
+  }
+
+  public getOperationCount(): number {
+    return this.templateData.operations.length;
+  }
 }
 
-// CLI usage
+// Legacy CLI usage for backward compatibility
 if (require.main === module) {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
     console.log('Usage: npm run generate <openapi-spec.json> <output-path>');
     console.log('Example: npm run generate ./openapi.json ./src/generated/handlers.ts');
+    console.log('\nFor the new CLI interface, use: oapi-express-gen <source> [options]');
     process.exit(1);
   }
   
@@ -344,6 +356,4 @@ if (require.main === module) {
     console.error('Error generating handlers:', error);
     process.exit(1);
   }
-}
-
-export { OpenAPIGenerator }; 
+} 

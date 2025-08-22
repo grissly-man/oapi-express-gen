@@ -5,14 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test:generate && npm run test:snapshot",
-    "test:generate": "node ../../dist/index.js ./example-openapi.json ./generated/handlers.ts",
-    "test:snapshot": "node -e \"const fs = require('fs'); const generated = fs.readFileSync('./generated/handlers.ts', 'utf8'); const snapshot = fs.readFileSync('./snapshots/handlers.snapshot.ts', 'utf8'); if (generated === snapshot) { console.log('✅ Snapshot test passed'); process.exit(0); } else { console.log('❌ Snapshot test failed'); process.exit(1); }\"",
-    "generate": "node ../../dist/index.js ./example-openapi.json ./generated/handlers.ts"
+    "test:generate": "oapi-express-gen ./petstore-openapi.json -o ./generated/handlers.ts",
+    "test:snapshot": "diff -q ./generated/handlers.ts ./snapshots/handlers.snapshot.ts > /dev/null && echo '✅ Snapshot test passed' || echo '❌ Snapshot test failed'",
+    "generate": "oapi-express-gen ./petstore-openapi.json -o ./generated/handlers.ts"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
   "devDependencies": {
+    "@grissly-man/oapi-express-gen": "file:../../",
     "@types/express": "^4.17.21"
   }
 } 
