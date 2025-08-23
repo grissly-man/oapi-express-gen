@@ -155,7 +155,7 @@ export class OpenAPIGenerator {
 
         const operationData: Operation = {
           operationId: operation.operationId,
-          httpMethod: method.toUpperCase(),
+          httpMethod: method,
           path: this.convertPathToExpress(path)
         };
 

@@ -1,7 +1,7 @@
 // AUTO-GENERATED - DO NOT EDIT
 // Generated from OpenAPI spec: User Management API v1.0.0
 
-import { Request, Response } from "express";
+import { Request, Response, Express } from "express";
 
 // Array item types
 export interface getUsersUsersItem {
@@ -13,15 +13,12 @@ export interface getUsersUsersItem {
 // Path parameter types
 export interface getUserPathParams {
   userId: string;
-  [key: string]: any;
 }
 export interface updateUserPathParams {
   userId: string;
-  [key: string]: any;
 }
 export interface deleteUserPathParams {
   userId: string;
-  [key: string]: any;
 }
 
 // Query parameter types
@@ -71,53 +68,58 @@ export interface updateUserResponse {
 }
 
 // Request types for each operation
-export interface getUsersRequest extends Request {
-  query: getUsersQueryParams;
-}
-export interface createUserRequest extends Request {
-  body: createUserBody;
-}
-export interface getUserRequest extends Request {
-  params: getUserPathParams;
-}
-export interface updateUserRequest extends Request {
-  params: updateUserPathParams;
-  body: updateUserBody;
-}
-export interface deleteUserRequest extends Request {
-  params: deleteUserPathParams;
-}
+export type getUsersRequest = Request<
+  {},
+  getUsersResponse,
+  {},
+  getUsersQueryParams
+>;
+export type createUserRequest = Request<
+  {},
+  createUserResponse,
+  createUserBody,
+  {}
+>;
+export type getUserRequest = Request<
+  getUserPathParams,
+  getUserResponse,
+  {},
+  {}
+>;
+export type updateUserRequest = Request<
+  updateUserPathParams,
+  updateUserResponse,
+  updateUserBody,
+  {}
+>;
+export type deleteUserRequest = Request<
+  deleteUserPathParams,
+  {},
+  {},
+  {}
+>;
 
 // Response types for each operation
-export interface getUsersResponse extends Response {
-  json: (body: getUsersResponse) => this;
-}
-export interface createUserResponse extends Response {
-  json: (body: createUserResponse) => this;
-}
-export interface getUserResponse extends Response {
-  json: (body: getUserResponse) => this;
-}
-export interface updateUserResponse extends Response {
-  json: (body: updateUserResponse) => this;
-}
-export interface deleteUserResponse extends Response {
-}
+export type getUsersResponseType = Response<getUsersResponse>
+export type createUserResponseType = Response<createUserResponse>
+export type getUserResponseType = Response<getUserResponse>
+export type updateUserResponseType = Response<updateUserResponse>
+export type deleteUserResponseType = Response
 
 // Handler function types
 export type Handlers = {
-  getUsers: (req: getUsersRequest, res: getUsersResponse) => void | Promise<void>;
-  createUser: (req: createUserRequest, res: createUserResponse) => void | Promise<void>;
-  getUser: (req: getUserRequest, res: getUserResponse) => void | Promise<void>;
-  updateUser: (req: updateUserRequest, res: updateUserResponse) => void | Promise<void>;
-  deleteUser: (req: deleteUserRequest, res: deleteUserResponse) => void | Promise<void>;
+  getUsers: (req: getUsersRequest, res: getUsersResponseType) => void | Promise<void>;
+  createUser: (req: createUserRequest, res: createUserResponseType) => void | Promise<void>;
+  getUser: (req: getUserRequest, res: getUserResponseType) => void | Promise<void>;
+  updateUser: (req: updateUserRequest, res: updateUserResponseType) => void | Promise<void>;
+  deleteUser: (req: deleteUserRequest, res: deleteUserResponseType) => void | Promise<void>;
 };
 
 // Route registration helper
-export const registerHandlers = (app: any, handlers: Handlers) => {
-  app.GET('/users', handlers.getUsers);
-  app.POST('/users', handlers.createUser);
-  app.GET('/users/:userId', handlers.getUser);
-  app.PUT('/users/:userId', handlers.updateUser);
-  app.DELETE('/users/:userId', handlers.deleteUser);
+export const registerHandlers = (app: Express, handlers: Handlers) => {
+  app.get('/users', handlers.getUsers);
+  app.post('/users', handlers.createUser);
+  app.get('/users/:userId', handlers.getUser);
+  app.put('/users/:userId', handlers.updateUser);
+  app.delete('/users/:userId', handlers.deleteUser);
 };

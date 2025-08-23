@@ -1,7 +1,7 @@
 // AUTO-GENERATED - DO NOT EDIT
 // Generated from OpenAPI spec: {{specTitle}} v{{specVersion}}
 
-import { Request, Response } from "express";
+import { Request, Response, Express } from "express";
 
 {{#if hasArrayItemSchemas}}
 // Array item types
@@ -21,7 +21,6 @@ export interface {{name}} {
   {{#each properties}}
   {{@key}}: {{this}};
   {{/each}}
-  [key: string]: any;
 }
 {{/each}}
 {{/if}}
@@ -62,37 +61,32 @@ export interface {{name}} {
 
 // Request types for each operation
 {{#each operations}}
-export interface {{operationId}}Request extends Request {
-  {{#if pathParams}}
-  params: {{pathParams}};
-  {{/if}}
-  {{#if queryParams}}
-  query: {{queryParams}};
-  {{/if}}
-  {{#if bodySchema}}
-  body: {{bodySchema}};
-  {{/if}}
-}
+export type {{operationId}}Request = Request<
+  {{#if pathParams}}{{pathParams}}{{else}}{}{{/if}},
+  {{#if responseSchema}}{{responseSchema}}{{else}}{}{{/if}},
+  {{#if bodySchema}}{{bodySchema}}{{else}}{}{{/if}},
+  {{#if queryParams}}{{queryParams}}{{else}}{}{{/if}}
+>;
 {{/each}}
 
 // Response types for each operation
 {{#each operations}}
-export interface {{operationId}}Response extends Response {
-  {{#if responseSchema}}
-  json: (body: {{responseSchema}}) => this;
-  {{/if}}
-}
+{{#if responseSchema}}
+export type {{operationId}}ResponseType = Response<{{responseSchema}}>
+{{else}}
+export type {{operationId}}ResponseType = Response
+{{/if}}
 {{/each}}
 
 // Handler function types
 export type Handlers = {
 {{#each operations}}
-  {{operationId}}: (req: {{operationId}}Request, res: {{operationId}}Response) => void | Promise<void>;
+  {{operationId}}: (req: {{operationId}}Request, res: {{operationId}}ResponseType) => void | Promise<void> | {{operationId}}ResponseType;
 {{/each}}
 };
 
 // Route registration helper
-export const registerHandlers = (app: any, handlers: Handlers) => {
+export const registerHandlers = (app: Express, handlers: Handlers) => {
 {{#each operations}}
   app.{{httpMethod}}('{{path}}', handlers.{{operationId}});
 {{/each}}
