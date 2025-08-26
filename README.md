@@ -105,49 +105,64 @@ registerHandlers(app, handlers);
 
 ## Testing
 
-The project uses npm workspaces for testing with multiple test scenarios:
-
-### Test Structure
-
-```
-test/
-├── workspace-1/           # User Management API tests
-│   ├── example-openapi.json
-│   ├── example-usage.ts
-│   ├── generated/         # Generated handlers (gitignored)
-│   └── snapshots/         # Snapshot files for testing
-├── workspace-2/           # PetStore API tests
-│   ├── petstore-openapi.json
-│   ├── generated/         # Generated handlers (gitignored)
-│   └── snapshots/         # Snapshot files for testing
-```
-
-### Running Tests
-
-```bash
-# Run all tests across all workspaces
-npm test
-
-# Run only snapshot tests
-npm run test:snapshot
-
-# Run tests for a specific workspace
-npm test --workspace=test/workspace-1
-```
+The project includes comprehensive testing to ensure generated code quality and consistency.
 
 ### Snapshot Testing
 
-The project uses basic snapshot testing to ensure generated code remains consistent:
+```bash
+# Test all workspaces
+npm run test:workspaces
 
-1. **Initial Snapshot**: Generated code is saved as a snapshot
-2. **Test Generation**: Code is regenerated during tests
-3. **Comparison**: Generated code is compared against snapshots
-4. **Validation**: Tests pass if generated code matches snapshots
+# Test specific workspace
+cd test/workspace-1
+npm run test:snapshot
+```
 
-This approach ensures that:
-- Generated code remains stable across changes
-- Regressions are caught automatically
-- Multiple OpenAPI specs are tested consistently
+### Type Safety Testing
+
+The generator produces robust TypeScript types that catch common programming errors at compile time. We test this by intentionally introducing type violations and ensuring they fail compilation consistently.
+
+```bash
+# Test type safety across all workspaces
+npm run test:typesafety
+
+# Test specific workspace type safety
+cd test/workspace-1
+npm run test:typesafety
+npm run test:typesafety-snapshot
+```
+
+#### Type Safety Test Coverage
+
+- **Type Mismatches**: String vs number, wrong property types
+- **Required Properties**: Missing required fields
+- **Additional Properties**: Extra properties when `additionalProperties: false`
+- **Path Parameters**: Type safety for URL parameters
+- **Query Parameters**: Type safety for query strings
+- **Request Bodies**: Type safety for POST/PUT data
+- **Response Types**: Type safety for API responses
+- **Express Integration**: Proper Request/Response generic typing
+
+#### Snapshot Files
+
+Type safety errors are captured as snapshots to ensure consistency:
+- `test/workspace-1/snapshots/typesafety-errors.snapshot.txt`
+- `test/workspace-2/snapshots/typesafety-errors.snapshot.txt`
+
+### Demo Script
+
+Run the interactive demo to see type safety testing in action:
+
+```bash
+./test/type-safety-demo.sh
+```
+
+### All Tests
+
+```bash
+# Run all tests (generation + type safety)
+npm run test:all
+```
 
 ## Generated Types
 

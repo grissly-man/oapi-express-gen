@@ -12,6 +12,7 @@ build/
 # Generated test files
 test/*/generated/
 test/*/snapshots/*.actual.ts
+test/*/snapshots/typesafety-errors.txt
 
 # IDE files
 .vscode/
@@ -90,3 +91,6 @@ tmp/
 temp/
 
 test/**/*.js
+
+# Keep snapshots but exclude temporary error files
+!test/*/snapshots/*.snapshot.txt

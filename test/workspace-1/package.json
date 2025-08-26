@@ -4,10 +4,13 @@
   "description": "Test workspace for OpenAPI generator",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:generate && tsc && npm run test:snapshot",
-    "test:generate": "oapi-express-gen ./example-openapi.json -o ./generated/handlers.ts",
-    "test:snapshot": "diff -q ./generated/handlers.ts ./snapshots/handlers.snapshot.ts > /dev/null && echo '✅ Snapshot test passed' || echo '❌ Snapshot test failed'",
-    "generate": "oapi-express-gen ./example-openapi.json -o ./generated/handlers.ts"
+    "test": "npm run test:happypath && npm run test:typesafety && echo '✅ Snapshot test passed' || echo '❌ Snapshot test failed'",
+    "test:happypath:generate": "oapi-express-gen example-openapi.json -o generated/handlers.ts",
+    "test:happypath:compare": "diff -q generated/handlers.ts snapshots/handlers.snapshot.ts",
+    "test:happypath": "npm run test:happypath:generate && tsc --esModuleInterop ./server.ts && npm run test:happypath:compare",
+    "test:typesafety:generate": "npx tsc --noEmit --esModuleInterop type-safety-tests.ts 2>&1 | head -50 > snapshots/typesafety-errors.txt",
+    "test:typesafety:compare": "diff -q snapshots/typesafety-errors.txt snapshots/typesafety-errors.snapshot.txt",
+    "test:typesafety": "npm run test:typesafety:generate && npm run test:typesafety:compare"
   },
   "dependencies": {
     "express": "^4.18.2"
