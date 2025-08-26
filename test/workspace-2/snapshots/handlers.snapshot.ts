@@ -3,43 +3,49 @@
 
 import { Request, Response, Express } from "express";
 
-// Array item types
-export interface listPetsPetsItem {
-  id: number;
-  name: string;
-  tag: string;
-}
-
 // Path parameter types
 export interface showPetByIdPathParams {
   petId: number;
+  
 }
 
 // Query parameter types
 export interface listPetsQueryParams {
-  limit: number;
-  [key: string]: any;
+  limit?: number;
+  
 }
 
 // Request body types
 export interface createPetBody {
   name: string;
-  tag: string;
+  tag?: string;
+  [key: string]: any;
 }
 
 // Response types
 export interface listPetsResponse {
-  pets: listPetsPetsItem[];
+  pets?: listPetsPetsItem[];
+  [key: string]: any;
 }
 export interface createPetResponse {
-  id: number;
-  name: string;
-  tag: string;
+  id?: number;
+  name?: string;
+  tag?: string;
+  [key: string]: any;
 }
 export interface showPetByIdResponse {
-  id: number;
-  name: string;
-  tag: string;
+  id?: number;
+  name?: string;
+  tag?: string;
+  [key: string]: any;
+}
+
+// Array item types
+export interface listPetsPetsItem {
+  id?: number;
+  name?: string;
+  tag?: string;
+  
 }
 
 // Request types for each operation

@@ -5,13 +5,16 @@ const app = express();
 
 const handlers: Handlers = {
   listPets: function (req, res) {
-    return res.json({ pets: [] });
+    const {limit} = req.query;
+    return res.json({ pets: [], total: limit, });
   },
   createPet: function (req, res) {
-    return res.json({ id: 1, name: "Fido", tag: "dog" });
+    const {name, tag} = req.body;
+    return res.json({ id: 1, name, tag });
   },
   showPetById: function (req, res) {
-    return res.json({ id: 1, name: "Fido", tag: "dog" });
+    const {petId} = req.params
+    return res.json({ id: petId, name: "Fido", tag: "dog" });
   }
 };
 

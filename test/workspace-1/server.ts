@@ -5,19 +5,23 @@ const app = express();
 
 const handlers: Handlers = {
   getUsers: (req, res) => {
-    req.query.aaslkdjfasdf;
-    res.json({ users: [], total: 0, page: 1 });
+    const {limit, page} = req.query;
+    res.json({ users: [], total: limit, page });
   },
   createUser: (req, res) => {
     res.json({ id: "1", name: "John Doe", email: "john.doe@example.com", age: 25, createdAt: new Date() });
   },
   getUser: (req, res) => {
-    res.json({ id: "1", name: "John Doe", email: "john.doe@example.com", age: 25 });
+    const {userId} = req.params;
+    res.json({ id: userId, name: "John Doe", email: "john.doe@example.com", age: 25 });
   },
   updateUser: (req, res) => {
-    res.json({ id: "1", name: "John Doe", email: "john.doe@example.com", age: 25, updatedAt: new Date() });
+    const {userId} = req.params;
+    res.json({ id: userId, name: "John Doe", email: "john.doe@example.com", age: 25, updatedAt: new Date() });
   },
   deleteUser: (req, res) => {
+    const {userId} = req.params;
+    console.error(`Deleted user ${userId}`);
     res.status(204).send();
   },
 };

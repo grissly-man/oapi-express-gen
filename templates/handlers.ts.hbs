@@ -3,61 +3,55 @@
 
 import { Request, Response, Express } from "express";
 
-{{#if hasArrayItemSchemas}}
-// Array item types
-{{#each arrayItemSchemas}}
-export interface {{name}} {
-  {{#each properties}}
-  {{@key}}: {{this}};
-  {{/each}}
-}
-{{/each}}
-{{/if}}
-
-{{#if hasPathParams}}
 // Path parameter types
 {{#each pathParams}}
 export interface {{name}} {
-  {{#each properties}}
-  {{@key}}: {{this}};
-  {{/each}}
+{{#each properties}}
+  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+{{/each}}
+  {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
-{{/if}}
 
-{{#if hasQueryParams}}
 // Query parameter types
 {{#each queryParams}}
 export interface {{name}} {
-  {{#each properties}}
-  {{@key}}: {{this}};
-  {{/each}}
-  [key: string]: any;
+{{#each properties}}
+  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+{{/each}}
+  {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
-{{/if}}
 
-{{#if hasBodySchemas}}
 // Request body types
 {{#each bodySchemas}}
 export interface {{name}} {
-  {{#each properties}}
-  {{@key}}: {{this}};
-  {{/each}}
+{{#each properties}}
+  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+{{/each}}
+  {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
-{{/if}}
 
-{{#if hasResponseSchemas}}
 // Response types
 {{#each responseSchemas}}
 export interface {{name}} {
-  {{#each properties}}
-  {{@key}}: {{this}};
-  {{/each}}
+{{#each properties}}
+  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+{{/each}}
+  {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
-{{/if}}
+
+// Array item types
+{{#each arrayItemSchemas}}
+export interface {{name}} {
+{{#each properties}}
+  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+{{/each}}
+  {{#if additionalProperties}}[key: string]: any;{{/if}}
+}
+{{/each}}
 
 // Request types for each operation
 {{#each operations}}

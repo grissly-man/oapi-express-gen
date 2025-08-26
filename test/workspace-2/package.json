@@ -4,7 +4,7 @@
   "description": "Second test workspace for OpenAPI generator",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:generate && tsc ./server.ts && npm run test:snapshot",
+    "test": "npm run test:generate && tsc && npm run test:snapshot",
     "test:generate": "oapi-express-gen ./petstore-openapi.json -o ./generated/handlers.ts",
     "test:snapshot": "diff -q ./generated/handlers.ts ./snapshots/handlers.snapshot.ts > /dev/null && echo '✅ Snapshot test passed' || echo '❌ Snapshot test failed'",
     "generate": "oapi-express-gen ./petstore-openapi.json -o ./generated/handlers.ts"
