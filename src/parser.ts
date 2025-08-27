@@ -1,6 +1,7 @@
 import { OpenAPIV3 } from 'openapi-types';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 
 // Extend Express Request interface
 declare module 'express' {
@@ -278,7 +279,13 @@ export function createParser(specPath: string, options?: ParseOptions): OpenAPIP
   
   try {
     const specContent = fs.readFileSync(specPath, 'utf-8');
-    spec = JSON.parse(specContent);
+    
+    // Check if it's YAML or JSON based on file extension
+    if (specPath.endsWith('.yaml') || specPath.endsWith('.yml')) {
+      spec = yaml.load(specContent) as OpenAPIV3.Document;
+    } else {
+      spec = JSON.parse(specContent);
+    }
   } catch (error) {
     throw new Error(`Failed to load OpenAPI spec from ${specPath}: ${error}`);
   }

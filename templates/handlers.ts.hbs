@@ -10,7 +10,7 @@ import { Request, Response, Express } from "express";
 {{#each pathParams}}
 export interface {{name}} {
 {{#each properties}}
-  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+  {{@key}}{{#unless required}}?{{/unless}}: {{{type}}};
 {{/each}}
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
@@ -22,7 +22,7 @@ export interface {{name}} {
 {{#each queryParams}}
 export interface {{name}} {
 {{#each properties}}
-  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+  {{@key}}{{#unless required}}?{{/unless}}: {{{type}}};
 {{/each}}
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
@@ -34,7 +34,7 @@ export interface {{name}} {
 {{#each bodySchemas}}
 export interface {{name}} {
 {{#each properties}}
-  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+  {{@key}}{{#unless required}}?{{/unless}}: {{{type}}};
 {{/each}}
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
@@ -46,7 +46,7 @@ export interface {{name}} {
 {{#each responseSchemas}}
 export interface {{name}} {
 {{#each properties}}
-  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+  {{@key}}{{#unless required}}?{{/unless}}: {{{type}}};
 {{/each}}
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
@@ -58,7 +58,7 @@ export interface {{name}} {
 {{#each arrayItemSchemas}}
 export interface {{name}} {
 {{#each properties}}
-  {{@key}}{{#unless required}}?{{/unless}}: {{type}};
+  {{@key}}{{#unless required}}?{{/unless}}: {{{type}}};
 {{/each}}
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }

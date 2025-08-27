@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
+import * as yaml from 'js-yaml';
 import { OpenAPIV3 } from 'openapi-types';
 
 // Export the parser
@@ -80,7 +81,14 @@ export class OpenAPIGenerator {
 
   constructor(specPath: string, customTemplatePath?: string) {
     const specContent = fs.readFileSync(specPath, 'utf-8');
-    this.spec = JSON.parse(specContent);
+    
+    // Check if it's YAML or JSON based on file extension
+    if (specPath.endsWith('.yaml') || specPath.endsWith('.yml')) {
+      this.spec = yaml.load(specContent) as OpenAPIV3.Document;
+    } else {
+      this.spec = JSON.parse(specContent);
+    }
+    
     this.customTemplatePath = customTemplatePath;
     this.templateData = this.buildTemplateData();
   }
