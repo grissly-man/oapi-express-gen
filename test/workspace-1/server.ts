@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { registerHandlers, Handlers } from "./generated/handlers";
-import { openAPIParser } from "@grissly-man/oapi-express-gen/src/parser";
+import { openAPIParser } from "oapi-express-gen/src/parser";
 
 const app = express();
 

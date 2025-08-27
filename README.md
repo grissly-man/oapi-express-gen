@@ -2,6 +2,8 @@
 
 A code generator that creates fully-typed Express.js handlers from OpenAPI specifications.
 
+I built this package to make code generation resilient to iterative changes in OpenAPI specs. Tools like [`oapi-codegen`](https://github.com/oapi-codegen/oapi-codegen) work well for generating initial server stubs, but once you implement those stubs, re-running codegen overwrites your work. The guiding principle here is that code generation should only produce *interfaces*—which can be safely regenerated—while leaving user implementations intact. This way, developers can evolve their API specs, regenerate code, and then rely on their IDE to surface unimplemented methods or type errors, without losing their existing logic.
+
 ## Features
 
 - **Fully Typed**: Generates TypeScript interfaces for request bodies, query parameters, path parameters, and responses
@@ -74,7 +76,7 @@ The generator creates a `Handlers` type that maps operation IDs to fully-typed h
 The generator includes a powerful request parser middleware that automatically parses and validates incoming requests according to your OpenAPI specification:
 
 ```typescript
-import { openAPIParser } from "@grissly-man/oapi-express-gen/parser";
+import { openAPIParser } from "oapi-express-gen/parser";
 
 const app = express();
 app.use(express.json()); // For parsing JSON bodies
@@ -123,7 +125,7 @@ const handlers: Handlers = {
 You can customize the parser behavior with options:
 
 ```typescript
-import { openAPIParser, ParseOptions } from "@grissly-man/oapi-express-gen/parser";
+import { openAPIParser, ParseOptions } from "oapi-express-gen/parser";
 
 const options: ParseOptions = {
   coerceTypes: true,        // Convert types when possible (default: true)
@@ -252,7 +254,6 @@ The generator creates several TypeScript interfaces:
 - `{operationId}Body` - Request body types
 
 ### Response Types
-- `{operationId}Response` - Extends Express Response with typed json method
 - `{operationId}Response` - Response body types
 
 ### Handler Type

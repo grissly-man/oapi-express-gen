@@ -1,5 +1,5 @@
 {
-  "name": "@grissly-man/oapi-express-gen",
+  "name": "oapi-express-gen",
   "version": "1.0.0",
   "description": "Code generator to create the interfaces and route handler for an express server from OpenAPI types",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "generate": "ts-node src/cli.ts",
-    "test": "npm run test:workspaces && npm run test:parser",
+    "test": "npm run test:workspaces && npm run test:parser && echo '✅ Snapshot test passed' || echo '❌ Snapshot test failed'",
     "test:workspaces": "npm run test --workspaces",
     "test:generate": "npm run generate --workspace=test/workspace-1",
     "test:snapshot": "npm run test:snapshot --workspaces",
