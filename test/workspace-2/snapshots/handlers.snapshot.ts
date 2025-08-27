@@ -3,6 +3,8 @@
 
 import { Request, Response, Express } from "express";
 
+// Generated from OpenAPI spec: PetStore API v1.0.0
+
 // Path parameter types
 export interface showPetByIdPathParams {
   petId: number;
@@ -86,3 +88,4 @@ export const registerHandlers = (app: Express, handlers: Handlers) => {
   app.post('/pets', handlers.createPet);
   app.get('/pets/:petId', handlers.showPetById);
 };
+

@@ -3,6 +3,8 @@
 
 import { Request, Response, Express } from "express";
 
+// Generated from OpenAPI spec: User Management API v1.0.0
+
 // Path parameter types
 export interface getUserPathParams {
   userId: string;
@@ -133,3 +135,4 @@ export const registerHandlers = (app: Express, handlers: Handlers) => {
   app.put('/users/:userId', handlers.updateUser);
   app.delete('/users/:userId', handlers.deleteUser);
 };
+

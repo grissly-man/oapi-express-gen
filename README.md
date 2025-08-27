@@ -69,18 +69,95 @@ npm run generate ./openapi.json ./src/generated/handlers.ts
 
 The generator creates a `Handlers` type that maps operation IDs to fully-typed handler functions:
 
+### 3. Request Parsing with OpenAPI Parser
+
+The generator includes a powerful request parser middleware that automatically parses and validates incoming requests according to your OpenAPI specification:
+
+```typescript
+import { openAPIParser } from "@grissly-man/oapi-express-gen/parser";
+
+const app = express();
+app.use(express.json()); // For parsing JSON bodies
+
+// Apply the OpenAPI parser middleware to all routes
+app.use(openAPIParser('./your-openapi-spec.json'));
+
+// Register your handlers - parsing is automatically enabled
+import { registerHandlers } from './generated/handlers';
+registerHandlers(app, handlers);
+```
+
+#### What the Parser Does
+
+- **Path Parameters**: Automatically parses and validates path parameters (e.g., `/users/:userId`)
+- **Query Parameters**: Parses query strings with proper type conversion (numbers, booleans, arrays)
+- **Request Bodies**: Validates request body structure against OpenAPI schemas
+- **Type Safety**: Ensures all parsed values match the expected types from your spec
+
+#### Parser Features
+
+- **Automatic Type Conversion**: Converts string inputs to appropriate types (numbers, booleans, dates)
+- **Array Support**: Handles comma-separated arrays and array parameters
+- **Validation**: Throws errors for invalid data types or formats
+- **Express Middleware**: Drop-in middleware that works with any Express app
+
+#### Example Usage
+
+```typescript
+// Your handler will receive parsed and validated data
+const handlers: Handlers = {
+  getUser: (req, res) => {
+    // req.params contains validated path parameters (automatically parsed)
+    const userId = req.params.userId; // Already parsed and validated
+    
+    // req.query contains validated query parameters (automatically converted)
+    const page = req.query.page; // Already converted to number if valid
+    
+    res.json({ userId, page });
+  }
+};
+```
+
+#### Parser Configuration
+
+You can customize the parser behavior with options:
+
+```typescript
+import { openAPIParser, ParseOptions } from "@grissly-man/oapi-express-gen/parser";
+
+const options: ParseOptions = {
+  coerceTypes: true,        // Convert types when possible (default: true)
+  strictNumbers: false,     // Strict number validation (default: false)
+  strictBooleans: false     // Strict boolean validation (default: false)
+};
+
+// Apply with custom options
+app.use(openAPIParser('./your-openapi-spec.json', options));
+```
+
+#### Supported Data Types
+
+The parser automatically handles:
+- **Strings**: Including email, date-time, date, and UUID formats
+- **Numbers**: Integers and floating-point numbers with validation
+- **Booleans**: Flexible boolean parsing (true/false, 1/0, yes/no)
+- **Arrays**: Comma-separated arrays and array parameters
+- **Objects**: Nested object structures from request bodies
+
+### 4. Handler Implementation
+
 ```typescript
 import { Handlers } from './generated/handlers';
 
 // Implement your handlers
 const handlers: Handlers = {
   getUser: (req, res) => {
-    // req.params.userId is fully typed
-    // req.query.page is fully typed (if defined)
+    // req.params.userId is fully typed and automatically parsed
+    // req.query.page is fully typed and automatically converted (if defined)
     // req.body is fully typed (if defined)
     
-    const userId = req.params.userId; // string
-    const page = req.query.page; // number | undefined
+    const userId = req.params.userId; // string (parsed according to OpenAPI spec)
+    const page = req.query.page; // number | undefined (converted from string)
     
     res.json({ userId, page });
   },

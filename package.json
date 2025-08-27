@@ -12,10 +12,11 @@
   "scripts": {
     "build": "tsc",
     "generate": "ts-node src/cli.ts",
-    "test": "npm run test:workspaces",
+    "test": "npm run test:workspaces && npm run test:parser",
     "test:workspaces": "npm run test --workspaces",
     "test:generate": "npm run generate --workspace=test/workspace-1",
-    "test:snapshot": "npm run test:snapshot --workspaces"
+    "test:snapshot": "npm run test:snapshot --workspaces",
+    "test:parser": "jest test/parser.test.ts --verbose"
   },
   "dependencies": {
     "commander": "^11.1.0",
@@ -25,8 +26,13 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.0",
     "typescript": "^5.3.0",
-    "ts-node": "^10.9.0"
+    "ts-node": "^10.9.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "supertest": "^6.3.0",
+    "@types/supertest": "^2.0.0"
   },
   "author": "",
   "license": "ISC"

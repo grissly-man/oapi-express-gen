@@ -1,7 +1,10 @@
 import express, { Request, Response } from "express";
 import { registerHandlers, Handlers } from "./generated/handlers";
+import { openAPIParser } from "@grissly-man/oapi-express-gen/src/parser";
 
 const app = express();
+
+app.use(openAPIParser('./test/workspace-1/example-openapi.json'));
 
 const handlers: Handlers = {
   getUsers: (req, res) => {

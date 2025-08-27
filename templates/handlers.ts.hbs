@@ -3,6 +3,9 @@
 
 import { Request, Response, Express } from "express";
 
+// Generated from OpenAPI spec: {{specTitle}} v{{specVersion}}
+
+{{#if hasPathParams}}
 // Path parameter types
 {{#each pathParams}}
 export interface {{name}} {
@@ -12,7 +15,9 @@ export interface {{name}} {
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
+{{/if}}
 
+{{#if hasQueryParams}}
 // Query parameter types
 {{#each queryParams}}
 export interface {{name}} {
@@ -22,7 +27,9 @@ export interface {{name}} {
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
+{{/if}}
 
+{{#if hasBodySchemas}}
 // Request body types
 {{#each bodySchemas}}
 export interface {{name}} {
@@ -32,7 +39,9 @@ export interface {{name}} {
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
+{{/if}}
 
+{{#if hasResponseSchemas}}
 // Response types
 {{#each responseSchemas}}
 export interface {{name}} {
@@ -42,7 +51,9 @@ export interface {{name}} {
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
+{{/if}}
 
+{{#if hasArrayItemSchemas}}
 // Array item types
 {{#each arrayItemSchemas}}
 export interface {{name}} {
@@ -52,6 +63,7 @@ export interface {{name}} {
   {{#if additionalProperties}}[key: string]: any;{{/if}}
 }
 {{/each}}
+{{/if}}
 
 // Request types for each operation
 {{#each operations}}
@@ -85,3 +97,4 @@ export const registerHandlers = (app: Express, handlers: Handlers) => {
   app.{{httpMethod}}('{{path}}', handlers.{{operationId}});
 {{/each}}
 };
+

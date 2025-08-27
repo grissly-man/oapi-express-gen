@@ -3,6 +3,9 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { OpenAPIV3 } from 'openapi-types';
 
+// Export the parser
+export { createOpenAPIParser, OpenAPIParser, ParseOptions } from './parser';
+
 interface PathParam {
   name: string;
   properties: Record<string, PropertyInfo>;
@@ -378,6 +381,7 @@ export class OpenAPIGenerator {
     return {
       specTitle: this.spec.info?.title || 'Unknown API',
       specVersion: this.spec.info?.version || '1.0.0',
+
       operations,
       pathParams: Array.from(pathParams.values()),
       queryParams: Array.from(queryParams.values()),
