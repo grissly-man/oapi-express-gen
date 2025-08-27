@@ -109,6 +109,23 @@ export class OpenAPIGenerator {
     return 'content' in response;
   }
 
+  private resolveSchema(schema: any): OpenAPIV3.SchemaObject | null {
+    if (!schema || typeof schema !== 'object') return null;
+    
+    if ('$ref' in schema && schema.$ref) {
+      const refPath = schema.$ref;
+      if (refPath.startsWith('#/components/schemas/')) {
+        const schemaName = refPath.split('/').pop();
+        if (schemaName && this.spec.components?.schemas?.[schemaName]) {
+          return this.spec.components.schemas[schemaName] as OpenAPIV3.SchemaObject;
+        }
+      }
+      return null;
+    }
+    
+    return schema;
+  }
+
   private mapOpenAPITypeToTS(schema: OpenAPIV3.SchemaObject, operationId?: string, propertyName?: string): string {
     if (!schema || typeof schema !== 'object') return 'any';
     
@@ -134,7 +151,12 @@ export class OpenAPIGenerator {
           const arrayItemInterfaceName = `${operationId}${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Item`;
           return `${arrayItemInterfaceName}[]`;
         }
-        return `${this.mapOpenAPITypeToTS(schema.items)}[]`;
+        const itemType = this.mapOpenAPITypeToTS(schema.items);
+        // If the item type is a union type (contains '|'), wrap it in parentheses
+        if (itemType.includes('|')) {
+          return `(${itemType})[]`;
+        }
+        return `${itemType}[]`;
       }
       return 'any[]';
     }
@@ -162,6 +184,29 @@ export class OpenAPIGenerator {
     return path.replace(/\{([^}]+)\}/g, ':$1');
   }
 
+  private generateOperationId(path: string, method: string): string {
+    // Convert path to camelCase operationId
+    // e.g., /user/consents -> getUserConsents
+    // e.g., /admin/agreements/{agreementId} -> getAdminAgreementsByAgreementId
+    
+    let operationId = method.toLowerCase();
+    
+    // Split path into segments and convert to camelCase
+    const segments = path.split('/').filter(Boolean);
+    for (const segment of segments) {
+      if (segment.startsWith('{') && segment.endsWith('}')) {
+        // Path parameter - add "By" prefix
+        const paramName = segment.slice(1, -1);
+        operationId += 'By' + paramName.charAt(0).toUpperCase() + paramName.slice(1);
+      } else {
+        // Regular segment - capitalize first letter
+        operationId += segment.charAt(0).toUpperCase() + segment.slice(1);
+      }
+    }
+    
+    return operationId;
+  }
+
   private buildTemplateData(): TemplateData {
     const operations: Operation[] = [];
     const pathParams = new Map<string, PathParam>();
@@ -170,18 +215,29 @@ export class OpenAPIGenerator {
     const responseSchemas = new Map<string, ResponseSchema>();
     const arrayItemSchemas = new Map<string, ArrayItemSchema>();
 
+
+
     // Process each path and method
     Object.entries(this.spec.paths).forEach(([path, pathItem]) => {
       if (!pathItem) return;
+
+
 
       const methods = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options'] as const;
       
       methods.forEach(method => {
         const operation = pathItem[method];
-        if (!operation || !operation.operationId) return;
+        if (!operation) return;
+        
+        // Auto-generate operationId if missing (for OpenAPI 3.1.0 compatibility)
+        let operationId = operation.operationId;
+        if (!operationId) {
+          // Generate operationId from path and method
+          operationId = this.generateOperationId(path, method);
+        }
 
         const operationData: Operation = {
-          operationId: operation.operationId,
+          operationId: operationId,
           httpMethod: method,
           path: this.convertPathToExpress(path)
         };
@@ -190,7 +246,7 @@ export class OpenAPIGenerator {
         if (operation.parameters) {
           const pathParamsList = operation.parameters.filter(p => this.isParameterObject(p) && p.in === 'path');
           if (pathParamsList.length > 0) {
-            const pathParamName = `${operation.operationId}PathParams`;
+            const pathParamName = `${operationId}PathParams`;
             operationData.pathParams = pathParamName;
             
             const properties: Record<string, PropertyInfo> = {};
@@ -198,7 +254,7 @@ export class OpenAPIGenerator {
             pathParamsList.forEach(param => {
               if (this.isParameterObject(param) && param.schema && this.isSchemaObject(param.schema)) {
                 properties[param.name] = {
-                  type: this.mapOpenAPITypeToTS(param.schema, operation.operationId, param.name),
+                  type: this.mapOpenAPITypeToTS(param.schema, operationId, param.name),
                   required: param.required !== false, // Path params are required by default
                   description: param.description
                 };
@@ -221,7 +277,7 @@ export class OpenAPIGenerator {
         if (operation.parameters) {
           const queryParamsList = operation.parameters.filter(p => this.isParameterObject(p) && p.in === 'query');
           if (queryParamsList.length > 0) {
-            const queryParamName = `${operation.operationId}QueryParams`;
+            const queryParamName = `${operationId}QueryParams`;
             operationData.queryParams = queryParamName;
             
             const properties: Record<string, PropertyInfo> = {};
@@ -229,7 +285,7 @@ export class OpenAPIGenerator {
             queryParamsList.forEach(param => {
               if (this.isParameterObject(param) && param.schema && this.isSchemaObject(param.schema)) {
                 properties[param.name] = {
-                  type: this.mapOpenAPITypeToTS(param.schema, operation.operationId, param.name),
+                  type: this.mapOpenAPITypeToTS(param.schema, operationId, param.name),
                   required: param.required === true,
                   description: param.description
                 };
@@ -250,30 +306,67 @@ export class OpenAPIGenerator {
 
         // Process request body
         if (operation.requestBody && this.isRequestBodyObject(operation.requestBody)) {
-          const bodySchemaName = `${operation.operationId}Body`;
+          const bodySchemaName = `${operationId}Body`;
           operationData.bodySchema = bodySchemaName;
           
-          if (operation.requestBody.content && operation.requestBody.content['application/json']) {
-            const schema = operation.requestBody.content['application/json'].schema;
-            if (schema && this.isSchemaObject(schema) && schema.properties) {
-              const properties: Record<string, PropertyInfo> = {};
-              const required: string[] = schema.required || [];
+          // Handle different content types (application/json, multipart/form-data, etc.)
+          const contentTypes = Object.keys(operation.requestBody.content || {});
+          if (contentTypes.length > 0) {
+            // Use the first available content type for now
+            const contentType = contentTypes[0];
+            const schema = operation.requestBody.content[contentType].schema;
+            
+            if (schema) {
+              let properties: Record<string, PropertyInfo> = {};
+              let required: string[] = [];
+              let additionalProperties = false;
               
-              Object.entries(schema.properties).forEach(([propName, propSchema]) => {
-                if (this.isSchemaObject(propSchema)) {
-                  properties[propName] = {
-                    type: this.mapOpenAPITypeToTS(propSchema, operation.operationId, propName),
-                    required: required.includes(propName),
-                    description: propSchema.description
-                  };
+              if (this.isSchemaObject(schema)) {
+                if (schema.properties) {
+                  // Inline schema with properties
+                  required = schema.required || [];
+                  additionalProperties = schema.additionalProperties !== false;
+                  
+                  Object.entries(schema.properties).forEach(([propName, propSchema]) => {
+                    if (this.isSchemaObject(propSchema)) {
+                      properties[propName] = {
+                        type: this.mapOpenAPITypeToTS(propSchema, operationId, propName),
+                        required: required.includes(propName),
+                        description: propSchema.description
+                      };
+                    }
+                  });
                 }
-              });
+              } else if (schema && typeof schema === 'object' && '$ref' in schema) {
+                // Resolve referenced schema
+                const resolvedSchema = this.resolveSchema(schema);
+                if (resolvedSchema && resolvedSchema.properties) {
+                  required = resolvedSchema.required || [];
+                  additionalProperties = resolvedSchema.additionalProperties !== false;
+                  
+                  Object.entries(resolvedSchema.properties).forEach(([propName, propSchema]) => {
+                    if (this.isSchemaObject(propSchema)) {
+                      properties[propName] = {
+                        type: this.mapOpenAPITypeToTS(propSchema, operationId, propName),
+                        required: required.includes(propName),
+                        description: propSchema.description
+                      };
+                    }
+                  });
+                } else {
+                  // Fallback if schema can't be resolved
+                  const refName = (schema as any).$ref.split('/').pop() || 'data';
+                  properties = { [refName]: { type: 'any', required: false, description: 'Referenced schema' } };
+                  required = [];
+                  additionalProperties = true;
+                }
+              }
               
               bodySchemas.set(bodySchemaName, { 
                 name: bodySchemaName, 
                 properties, 
                 required,
-                additionalProperties: schema.additionalProperties !== false
+                additionalProperties
               });
             }
           }
@@ -282,31 +375,69 @@ export class OpenAPIGenerator {
         // Process responses
         if (operation.responses) {
           const successResponse = operation.responses['200'] || operation.responses['201'];
-          if (successResponse && this.isResponseObject(successResponse) && successResponse.content && successResponse.content['application/json']) {
-            const schema = successResponse.content['application/json'].schema;
-            if (schema && this.isSchemaObject(schema) && schema.properties) {
-              const responseSchemaName = `${operation.operationId}Response`;
-              operationData.responseSchema = responseSchemaName;
+          if (successResponse && this.isResponseObject(successResponse) && successResponse.content) {
+            // Handle different content types (application/json, etc.)
+            const contentTypes = Object.keys(successResponse.content);
+            if (contentTypes.length > 0) {
+              const contentType = contentTypes[0];
+              const schema = successResponse.content[contentType].schema;
               
-              const properties: Record<string, PropertyInfo> = {};
-              const required: string[] = schema.required || [];
-              
-              Object.entries(schema.properties).forEach(([propName, propSchema]) => {
-                if (this.isSchemaObject(propSchema)) {
-                  properties[propName] = {
-                    type: this.mapOpenAPITypeToTS(propSchema, operation.operationId, propName),
-                    required: required.includes(propName),
-                    description: propSchema.description
-                  };
+              if (schema) {
+                const responseSchemaName = `${operationId}Response`;
+                operationData.responseSchema = responseSchemaName;
+                
+                let properties: Record<string, PropertyInfo> = {};
+                let required: string[] = [];
+                let additionalProperties = false;
+                
+                if (this.isSchemaObject(schema)) {
+                  if (schema.properties) {
+                    // Inline schema with properties
+                    required = schema.required || [];
+                    additionalProperties = schema.additionalProperties !== false;
+                    
+                    Object.entries(schema.properties).forEach(([propName, propSchema]) => {
+                      if (this.isSchemaObject(propSchema)) {
+                        properties[propName] = {
+                          type: this.mapOpenAPITypeToTS(propSchema, operationId, propName),
+                          required: required.includes(propName),
+                          description: propSchema.description
+                        };
+                      }
+                    });
+                  }
+                } else if (schema && typeof schema === 'object' && '$ref' in schema) {
+                  // Resolve referenced schema
+                  const resolvedSchema = this.resolveSchema(schema);
+                  if (resolvedSchema && resolvedSchema.properties) {
+                    required = resolvedSchema.required || [];
+                    additionalProperties = resolvedSchema.additionalProperties !== false;
+                    
+                    Object.entries(resolvedSchema.properties).forEach(([propName, propSchema]) => {
+                      if (this.isSchemaObject(propSchema)) {
+                        properties[propName] = {
+                          type: this.mapOpenAPITypeToTS(propSchema, operationId, propName),
+                          required: required.includes(propName),
+                          description: propSchema.description
+                        };
+                      }
+                    });
+                  } else {
+                    // Fallback if schema can't be resolved
+                    const refName = (schema as any).$ref.split('/').pop() || 'data';
+                    properties = { [refName]: { type: 'any', required: false, description: 'Referenced schema' } };
+                    required = [];
+                    additionalProperties = true;
+                  }
                 }
-              });
-              
-              responseSchemas.set(responseSchemaName, { 
-                name: responseSchemaName, 
-                properties, 
-                required,
-                additionalProperties: schema.additionalProperties !== false
-              });
+                
+                responseSchemas.set(responseSchemaName, { 
+                  name: responseSchemaName, 
+                  properties, 
+                  required,
+                  additionalProperties
+                });
+              }
             }
           }
         }
@@ -314,10 +445,12 @@ export class OpenAPIGenerator {
         // Process array items in request body
         if (operation.requestBody && this.isRequestBodyObject(operation.requestBody)) {
           const requestBodyContent = operation.requestBody.content;
-          if (requestBodyContent && requestBodyContent['application/json'] && requestBodyContent['application/json'].schema) {
-            const schema = requestBodyContent['application/json'].schema;
+          const contentTypes = Object.keys(requestBodyContent || {});
+          if (contentTypes.length > 0) {
+            const contentType = contentTypes[0];
+            const schema = requestBodyContent[contentType].schema;
             if (schema && this.isSchemaObject(schema) && schema.type === 'array' && schema.items) {
-              const arrayItemSchemaName = `${operation.operationId}ArrayItem`;
+              const arrayItemSchemaName = `${operationId}ArrayItem`;
               const properties: Record<string, PropertyInfo> = {};
               const required: string[] = [];
               
@@ -326,10 +459,11 @@ export class OpenAPIGenerator {
                 Object.entries(schema.items.properties).forEach(([propName, propSchema]) => {
                   if (this.isSchemaObject(propSchema)) {
                     properties[propName] = {
-                      type: this.mapOpenAPITypeToTS(propSchema, operation.operationId),
+                      type: this.mapOpenAPITypeToTS(propSchema, operationId),
                       required: itemRequired.includes(propName),
                       description: propSchema.description
                     };
+                    required: itemRequired.includes(propName);
                   }
                 });
               }
@@ -353,7 +487,7 @@ export class OpenAPIGenerator {
               // Check for array properties in the response schema
               Object.entries(schema.properties).forEach(([propName, propSchema]) => {
                 if (this.isSchemaObject(propSchema) && propSchema.type === 'array' && propSchema.items) {
-                  const arrayItemSchemaName = `${operation.operationId}${propName.charAt(0).toUpperCase() + propName.slice(1)}Item`;
+                  const arrayItemSchemaName = `${operationId}${propName.charAt(0).toUpperCase() + propName.slice(1)}Item`;
                   const properties: Record<string, PropertyInfo> = {};
                   const required: string[] = [];
                   
@@ -361,11 +495,11 @@ export class OpenAPIGenerator {
                     const itemRequired = propSchema.items.required || [];
                     Object.entries(propSchema.items.properties).forEach(([itemPropName, itemPropSchema]) => {
                       if (this.isSchemaObject(itemPropSchema)) {
-                        properties[itemPropName] = {
-                          type: this.mapOpenAPITypeToTS(itemPropSchema, operation.operationId),
-                          required: itemRequired.includes(itemPropName),
-                          description: itemPropSchema.description
-                        };
+                                            properties[itemPropName] = {
+                      type: this.mapOpenAPITypeToTS(itemPropSchema, operationId),
+                      required: itemRequired.includes(itemPropName),
+                      description: itemPropSchema.description
+                    };
                       }
                     });
                   }
