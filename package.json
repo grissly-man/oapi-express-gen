@@ -1,6 +1,6 @@
 {
   "name": "oapi-express-gen",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Code generator to create the interfaces and route handler for an express server from OpenAPI types",
   "main": "dist/index.js",
   "bin": {
